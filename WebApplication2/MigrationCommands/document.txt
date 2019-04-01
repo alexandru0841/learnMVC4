@@ -1,0 +1,3 @@
+﻿Enable-Migrations -ContextTypeName OdeToFoodDB -MigrationsDirectory Migrations\OdeFood
+add-migration -ConfigurationTypeName WebApplication2.Migrations.OdeFood.Configuration "InitialCreate"
+update-database -COnfigurationTypeName WebApplication2.Migrations.OdeFood.Configuration 
