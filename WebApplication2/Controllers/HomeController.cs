@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication2.Models;
+using PagedList;
 
 namespace WebApplication2.Controllers
 {
@@ -12,33 +13,49 @@ namespace WebApplication2.Controllers
     {
         private OdeToFoodDB _db = new OdeToFoodDB();
 
-        public ActionResult Index(string searchTerm = null)
+        public ActionResult AutoComplete(string term)
+        {
+            var model = _db.Restaurants
+                      .Where(r => r.Name.StartsWith(term))
+                      .Take(10)
+                      .Select(r => new
+                      {
+                          label = r.Name
+                      });
+            return Json(model, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult Index(string searchTerm = null, int page=1)
         {
 
             //var myList = _db.Restaurants.ToList();
             var model = _db.Restaurants.Include(nameof(Restaurant.Reviews))
                        .OrderByDescending(r => r.Reviews.Average(review => review.Rating))
-                       .Where(r=>searchTerm == null || r.Name.StartsWith(searchTerm))
-                       .Take(10)
+                       .Where(r => searchTerm == null || r.Name.StartsWith(searchTerm))
                        .Select(r => new restaurantListViewModel
                        {
-                           Id =r.Id,
+                           Id = r.Id,
                            Name = r.Name,
                            City = r.City,
                            Country = r.Country,
-                          
+                           CountOfReviews = r.Reviews.Count()
                        }
-                       );
+                       ).ToPagedList(page, 10);
+
+            if (Request.IsAjaxRequest())
+            {
+                return PartialView("_Restaurants", model);
+            }
 
             //if (_db.Database.Exists())
             //{
 
-                        //}
-                        //else
-                        //{
-                        //    _db.Database.Initialize(true);
-                        //    model = _db.Restaurants.ToList();
-                        //}
+            //}
+            //else
+            //{
+            //    _db.Database.Initialize(true);
+            //    model = _db.Restaurants.ToList();
+            //}
 
 
             return View(model);
